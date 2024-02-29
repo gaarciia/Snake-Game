@@ -1,11 +1,159 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo da Cobrinha</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogo da Cobrinha</title>
+<style>
+    body {
+        background-color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    #gameCanvas {
+        border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+    #score {
+        color: #fff;
+        text-align: center;
+        font-size: 24px;
+        margin-top: 20px;
+    }
+</style>
 </head>
 <body>
-    
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+<script>
+    window.onload = function() {
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const snakeSize = 10;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        
+        let score = 0;
+        let snake = [{ x: 200, y: 200 }, { x: 190, y: 200 }, { x: 180, y: 200 }];
+        let food = { x: 0, y: 0 };
+        let dx = 10;
+        let dy = 0;
+
+        function drawSnake() {
+            snake.forEach(drawSnakePart);
+        }
+
+        function drawSnakePart(snakePart) {
+            ctx.fillStyle = "green";
+            ctx.strokeStyle = "black";
+            ctx.fillRect(snakePart.x, snakePart.y, snakeSize, snakeSize);
+            ctx.strokeRect(snakePart.x, snakePart.y, snakeSize, snakeSize);
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "red";
+            ctx.strokeStyle = "black";
+            ctx.fillRect(food.x, food.y, snakeSize, snakeSize);
+            ctx.strokeRect(food.x, food.y, snakeSize, snakeSize);
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+            const ateFood = snake[0].x === food.x && snake[0].y === food.y;
+            if (ateFood) {
+                score += 10;
+                document.getElementById("score").innerText = "Score: " + score;
+                createFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function createFood() {
+            food.x = Math.floor(Math.random() * (canvasWidth / snakeSize)) * snakeSize;
+            food.y = Math.floor(Math.random() * (canvasHeight / snakeSize)) * snakeSize;
+            snake.forEach(function(part) {
+                if (part.x === food.x && part.y === food.y) {
+                    createFood();
+                }
+            });
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = "#222";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        }
+
+        function main() {
+            if (isGameOver()) {
+                return;
+            }
+            setTimeout(function onTick() {
+                clearCanvas();
+                drawFood();
+                moveSnake();
+                drawSnake();
+                main();
+            }, 100);
+        }
+
+        function isGameOver() {
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+                    return true;
+                }
+            }
+            const hitLeftWall = snake[0].x < 0;
+            const hitRightWall = snake[0].x > canvasWidth - snakeSize;
+            const hitTopWall = snake[0].y < 0;
+            const hitBottomWall = snake[0].y > canvasHeight - snakeSize;
+            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
+        }
+
+        function changeDirection(event) {
+            const LEFT_KEY = 37;
+            const RIGHT_KEY = 39;
+            const UP_KEY = 38;
+            const DOWN_KEY = 40;
+
+            const keyPressed = event.keyCode;
+            const goingUp = dy === -snakeSize;
+            const goingDown = dy === snakeSize;
+            const goingRight = dx === snakeSize;
+            const goingLeft = dx === -snakeSize;
+
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -snakeSize;
+                dy = 0;
+            }
+
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -snakeSize;
+            }
+
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = snakeSize;
+                dy = 0;
+            }
+
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = snakeSize;
+            }
+        }
+
+        createFood();
+        document.getElementById("score").innerText = "Score: " + score;
+        document.addEventListener("keydown", changeDirection);
+        main();
+    }
+</script>
+<div id="score"></div>
 </body>
 </html>
