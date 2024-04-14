@@ -1,2 +1,2 @@
 # Snake-Game
-Isso é uma alteração
+Game feito apenas em html
